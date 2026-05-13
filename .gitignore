@@ -1,0 +1,13 @@
+# Archivos locales de configuración de Terraform
+.terraform/
+
+# Archivos de estado (¡MUY IMPORTANTE! Contienen datos sensibles)
+*.tfstate
+*.tfstate.backup
+
+# Variables locales que podrían tener contraseñas
+*.tfvars
+*.tfvars.json
+
+# Archivos de log
+*.log

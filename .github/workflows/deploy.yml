@@ -3,9 +3,10 @@ name: GKE Deployment Pipeline
 on:
   push:
     branches: [ "main" ] # Se activa cuando haces push a la rama principal
+
 permissions:
-  contents: read    # Para que pueda leer tu código
-  id-token: write   # CRÍTICO: Para que pueda autenticarse con Google Cloud
+  contents: read   # Para que pueda leer tu código
+  id-token: write  # CRÍTICO: Para que pueda autenticarse con Google Cloud
 
 jobs:
   deploy:
@@ -13,29 +14,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    # 1. Autenticación con Google Cloud (Sin usar llaves JSON)
-    - id: 'auth'
-      name: 'Authenticate to Google Cloud'
-      uses: 'google-github-actions/auth@v2'
-      with:
-        workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-        service_account: ${{ secrets.GCP_SA_EMAIL }}
+      # 1. Autenticación con Google Cloud (Sin usar llaves JSON)
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
 
-    # 2. Configurar kubectl para tu clúster
-    - name: 'Set up GKE Credentials'
-      uses: 'google-github-actions/get-gke-credentials@v2'
-      with:
-        cluster_name: 'cluster-devops' # Cambia esto por el nombre de tu clúster
-        location: 'us-central1'         # Cambia esto por tu región
-        project_id: 'proyecto-prueba-12345-495621'
+      - name: Debug Auth
+        run: |
+          gcloud auth list
+          gcloud config get-value account
+          echo "SA desde secret: ${{ secrets.GCP_SA_EMAIL }}"
 
-        # 3. El paso de oro: Desplegar tus YAMLs desde la carpeta correcta
-    - name: 'Deploy to GKE'
-      run: |
-        # Usamos la carpeta 'manifests' que se ve en tu imagen image_65e99d.png
-        kubectl apply -f manifests/loadbalancer.yaml
-        kubectl apply -f manifests/produccion_v1.yaml
-        kubectl apply -f manifests/Canary_v2.yaml
+      # 2. Configurar kubectl para tu clúster
+      - name: Set up GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: 'cluster-devops'          # Cambia esto por el nombre de tu clúster
+          location: 'us-central1'                 # Cambia esto por tu región
+          project_id: 'proyecto-prueba-12345-495621'
+
+      # 3. El paso de oro: Desplegar tus YAMLs desde la carpeta correcta
+      - name: Deploy to GKE
+        run: |
+          kubectl apply -f manifests/loadbalancer.yaml
+          kubectl apply -f manifests/produccion_v1.yaml
+          kubectl apply -f manifests/Canary_v2.yaml

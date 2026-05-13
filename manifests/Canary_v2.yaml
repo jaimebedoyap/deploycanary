@@ -21,8 +21,8 @@
           - containerPort: 80
           resources:
             requests:
-              cpu: "100m"      # Antes tenías 500m
-              memory: "128Mi"  # Antes tenías 2Gi
+              cpu: "25m"      # Antes tenías 500m
+              memory: "64Mi"  # Antes tenías 2Gi
             limits:
               cpu: "200m"
               memory: "256Mi"

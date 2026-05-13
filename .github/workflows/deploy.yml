@@ -36,7 +36,7 @@ jobs:
         uses: google-github-actions/get-gke-credentials@v2
         with:
           cluster_name: 'cluster-devops'          # Cambia esto por el nombre de tu clúster
-          location: 'us-central1'                 # Cambia esto por tu región
+          location: 'us-central1-a'                 # Cambia esto por tu región
           project_id: 'proyecto-prueba-12345-495621'
 
       # 3. El paso de oro: Desplegar tus YAMLs desde la carpeta correcta

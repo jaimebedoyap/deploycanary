@@ -39,7 +39,7 @@ jobs:
       run: kubectl apply -f manifests/produccion_v1.yaml
 
     - name: Deploy v2 (Canary - 20% tráfico)
-      run: kubectl apply -f manifests/canary_v2.yaml
+      run: kubectl apply -f manifests/Canary_v2.yaml
 
     - name: Deploy LoadBalancer Service
       run: kubectl apply -f manifests/loadbalancer.yaml

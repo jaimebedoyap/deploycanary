@@ -60,6 +60,7 @@ data:
     <!DOCTYPE html>
     <html>
     <head>
+    <meta charset="UTF-8">
       <title>Nginx - Versión 2</title>
       <style>
         body {
@@ -97,7 +98,7 @@ data:
         <h1>🐤 Versión 2</h1>
         <p>Canary — en validación</p>
         <div class="badge">CANARY</div>
-        <p style="margin-top:24px; font-size:0.9em;">Pod: $HOSTNAME</p>
+        <p style="margin-top:24px; font-size:0.9em;">Canary Deployment - GKE</p>
       </div>
     </body>
     </html>

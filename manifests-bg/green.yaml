@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-green
+  namespace: bluegreen-demo
+  labels:
+    app: nginx
+    slot: green      # Identifica este ambiente como "green"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+      slot: green
+  template:
+    metadata:
+      labels:
+        app: nginx
+        slot: green  # ← El Service apunta a este label para activar Green
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.27
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 5
+      volumes:
+      - name: html
+        configMap:
+          name: nginx-green-html
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-green-html
+  namespace: bluegreen-demo
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Green Environment</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: Arial, sans-serif;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          background: linear-gradient(135deg, #2e7d32, #1b5e20);
+          color: white;
+        }
+        .card {
+          text-align: center;
+          padding: 50px 60px;
+          background: rgba(255,255,255,0.12);
+          border-radius: 20px;
+          border: 2px solid rgba(255,255,255,0.25);
+          backdrop-filter: blur(10px);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .circle {
+          width: 80px;
+          height: 80px;
+          background: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 20px;
+          font-size: 2em;
+        }
+        h1 { font-size: 3em; margin-bottom: 8px; }
+        .version { font-size: 1.1em; opacity: 0.85; margin-bottom: 20px; }
+        .badge {
+          display: inline-block;
+          background: white;
+          color: #2e7d32;
+          padding: 8px 28px;
+          border-radius: 25px;
+          font-weight: bold;
+          font-size: 1em;
+          letter-spacing: 1px;
+          margin-bottom: 20px;
+        }
+        .info {
+          font-size: 0.85em;
+          opacity: 0.75;
+          margin-top: 16px;
+          border-top: 1px solid rgba(255,255,255,0.2);
+          padding-top: 16px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <div class="circle">🟢</div>
+        <h1>Green</h1>
+        <p class="version">Ambiente Nuevo — nginx v1.27</p>
+        <div class="badge">NEW</div>
+        <div class="info">
+          <p>Blue/Green Deployment — GKE</p>
+          <p>Slot: Green | Versión: 2.0</p>
+        </div>
+      </div>
+    </body>
+    </html>

@@ -1,0 +1,70 @@
+name: Blue/Green Deployment Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'manifests-bg/**'   # Solo se activa cuando cambian archivos de blue/green
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Blue/Green Deploy to GKE
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - id: auth
+      name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: ${{ secrets.GCP_SA_EMAIL }}
+        project_id: proyecto-prueba-12345-495621
+
+    - name: Set up GKE Credentials
+      uses: google-github-actions/get-gke-credentials@v2
+      with:
+        cluster_name: cluster-devops
+        location: us-central1-a
+        project_id: proyecto-prueba-12345-495621
+
+    - name: Deploy Namespace
+      run: kubectl apply -f manifests-bg/namespace-bg.yaml
+
+    - name: Deploy Blue (Ambiente Activo)
+      run: kubectl apply -f manifests-bg/blue.yaml
+
+    - name: Deploy Green (Ambiente Nuevo)
+      run: kubectl apply -f manifests-bg/green.yaml
+
+    - name: Deploy Service (Apuntando a Blue)
+      run: kubectl apply -f manifests-bg/service-bg.yaml
+
+    - name: Verificar despliegue
+      run: |
+        echo "=== Pods Blue/Green ==="
+        kubectl get pods -n bluegreen-demo --show-labels
+
+        echo ""
+        echo "=== Ambiente activo ==="
+        ACTIVE=$(kubectl get service nginx-bg-service -n bluegreen-demo \
+          -o jsonpath='{.spec.selector.slot}')
+        echo "Slot activo: $ACTIVE"
+
+        echo ""
+        echo "=== IP del LoadBalancer ==="
+        kubectl get service nginx-bg-service -n bluegreen-demo
+
+        echo ""
+        echo "=== Comandos para hacer el switch ==="
+        echo "Activar GREEN:"
+        echo "  kubectl patch service nginx-bg-service -n bluegreen-demo -p '{\"spec\":{\"selector\":{\"app\":\"nginx\",\"slot\":\"green\"}}}'"
+        echo ""
+        echo "Volver a BLUE (rollback):"
+        echo "  kubectl patch service nginx-bg-service -n bluegreen-demo -p '{\"spec\":{\"selector\":{\"app\":\"nginx\",\"slot\":\"blue\"}}}'"
